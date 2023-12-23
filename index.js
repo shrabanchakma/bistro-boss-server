@@ -214,6 +214,24 @@ async function run() {
       res.send(result);
     });
 
+    // stats or analytics
+    app.get("/admin-stats", async (req, res) => {
+      const users = await userCollection.estimatedDocumentCount();
+      const items = await menuCollection.estimatedDocumentCount();
+      const carts = await cartCollection.estimatedDocumentCount();
+      const payments = await paymentCollection.find().toArray();
+      const revenue = payments.reduce(
+        (total, payment) => total + payment.price,
+        0
+      );
+      res.send({
+        users: users,
+        items: items,
+        carts: carts,
+        revenue: revenue,
+      });
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
