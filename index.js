@@ -243,6 +243,37 @@ async function run() {
       });
     });
 
+    // order stats
+
+    app.get("/order-stats", async (req, res) => {
+      const result = await paymentCollection
+        .aggregate([
+          {
+            $unwind: "$menuIds",
+          },
+          {
+            $lookup: {
+              from: "menu",
+              localField: "menuIds",
+              foreignField: "_id",
+              as: "menuItem",
+            },
+          },
+          {
+            $unwind: "$menuItem",
+          },
+          {
+            $group: {
+              _id: "$menuItem.category",
+              quantity: { $sum: 1 },
+              totalRevenue: { $sum: "$menuItem.price" },
+            },
+          },
+        ])
+        .toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
